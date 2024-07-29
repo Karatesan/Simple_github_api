@@ -1,9 +1,13 @@
 package com.karatesan.Simple_Github_api.configuration;
 
+import com.karatesan.Simple_Github_api.ecxeption.TooManyRequestsException;
+import com.karatesan.Simple_Github_api.ecxeption.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClient;
 
 
@@ -25,7 +29,7 @@ public class RestClientConfig {
     private String authorization;
 
     /**
-     * Creates a {@link RestClient} bean with the authorization header configured.
+     * Creates a {@link RestClient} bean with the authorization header and simple status handler configured.
      *
      * <p>If the {@code github.token} is provided in the {@code application.properties} file, it will
      * be used to set the {@code Authorization} header as {@code "Bearer " + authorization}.
@@ -36,6 +40,12 @@ public class RestClientConfig {
     public RestClient restClient() {
         return RestClient.builder()
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + authorization)
+                .defaultStatusHandler(HttpStatusCode::is4xxClientError, (request, response) -> {
+                    if(response.getStatusCode().equals(HttpStatus.NOT_FOUND))
+                        throw new UserNotFoundException("User not found.");
+                    if(response.getStatusCode().equals(HttpStatus.TOO_MANY_REQUESTS) || response.getStatusCode().equals(HttpStatus.UNAUTHORIZED))
+                        throw new TooManyRequestsException("Github API rate limit exceeded");
+                })
                 .build();
     }
     @Bean

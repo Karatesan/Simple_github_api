@@ -36,7 +36,6 @@ public class GithubService {
      * @return a list of {@code UserRepositoriesResponse} containing data about the user's repositories and branches
      * @throws UserNotFoundException if the user with the specified username doesn't exist
      * @throws TooManyRequestsException if the API rate limit is exceeded
-     * @throws ClientErrorException if an error on the server side occurs
      */
 
     public List<UserRepositoriesResponse> fetchRepos(String username) {
@@ -44,15 +43,6 @@ public class GithubService {
                 .uri("https://api.github.com/users/{username}/repos", username)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
-                    if(response.getStatusCode().equals(HttpStatus.NOT_FOUND))
-                        throw new UserNotFoundException("User not found.");
-                    if(response.getStatusCode().equals(HttpStatus.TOO_MANY_REQUESTS) || response.getStatusCode().equals(HttpStatus.UNAUTHORIZED))
-                        throw new TooManyRequestsException("Github API rate limit exceeded");
-                })
-                .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
-                    throw new ClientErrorException("Client side error.");
-                })
                 .body(GithubRepositoryData[].class);
 
         List<UserRepositoriesResponse> list = Stream.of(repositories)
@@ -70,7 +60,6 @@ public class GithubService {
      * @return a list of {@code GithubBranchData} containing data about the branches of the repository
      * @throws UserNotFoundException if the user or repository with the specified name doesn't exist
      * @throws TooManyRequestsException if the API rate limit is exceeded
-     * @throws ClientErrorException if an error on the server side occurs
      */
 
     public List<GithubBranchData> fetchAllBranchesFromRepo(String repoName, String username) {
@@ -78,15 +67,6 @@ public class GithubService {
                 .uri("https://api.github.com/repos/{username}/{repoName}/branches", username, repoName)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (request, response) -> {
-                    if(response.getStatusCode().equals(HttpStatus.NOT_FOUND))
-                        throw new UserNotFoundException("User not found.");
-                    if(response.getStatusCode().equals(HttpStatus.TOO_MANY_REQUESTS))
-                        throw new UserNotFoundException("Github API rate limit exceeded");
-                })
-                .onStatus(HttpStatusCode::is5xxServerError, (request, response) -> {
-                    throw new ClientErrorException("Client side error.");
-                })
                 .body(GithubBranchData[].class);
 
         return Arrays.asList(githubBranchData);
