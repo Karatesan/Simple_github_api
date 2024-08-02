@@ -2,12 +2,9 @@ package com.karatesan.Simple_Github_api.service;
 
 import com.karatesan.Simple_Github_api.dto.GithubBranchData;
 import com.karatesan.Simple_Github_api.dto.GithubRepositoryData;
-import com.karatesan.Simple_Github_api.dto.UserRepositoriesResponse;
-import com.karatesan.Simple_Github_api.ecxeption.ClientErrorException;
+import com.karatesan.Simple_Github_api.dto.Response;
 import com.karatesan.Simple_Github_api.ecxeption.TooManyRequestsException;
 import com.karatesan.Simple_Github_api.ecxeption.UserNotFoundException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -30,7 +27,7 @@ public class GithubService {
 
     /**
      * Fetches all repositories for a specified user via {@code RestClient}. Only non-fork repositories are included.
-     * This method maps the response using {@link #mapToUserRepositoriesResponse(GithubRepositoryData)}.
+     * This method maps the response using
      *
      * @param username the login of the GitHub user
      * @return a list of {@code UserRepositoriesResponse} containing data about the user's repositories and branches
@@ -38,18 +35,17 @@ public class GithubService {
      * @throws TooManyRequestsException if the API rate limit is exceeded
      */
 
-    public List<UserRepositoriesResponse> fetchRepos(String username) {
+    public List<Response> fetchRepos(String username) {
         GithubRepositoryData[] repositories = restClient.get()
                 .uri("https://api.github.com/users/{username}/repos", username)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .body(GithubRepositoryData[].class);
 
-        List<UserRepositoriesResponse> list = Stream.of(repositories)
-                .filter(repo -> !repo.isFork())
+        return Stream.of(repositories)
+                .filter(repo -> !repo.fork())
                 .map(this::mapToUserRepositoriesResponse)
                 .toList();
-        return list;
     }
 
     /**
@@ -80,12 +76,10 @@ public class GithubService {
      * @return a {@code UserRepositoriesResponse} containing formatted data from the repository
      */
 
-    public UserRepositoriesResponse mapToUserRepositoriesResponse(GithubRepositoryData repo){
-        UserRepositoriesResponse response = new UserRepositoriesResponse();
-        response.setRepositoryName(repo.getName());
-        response.setOwner(repo.getOwner().getLogin());
-        response.setBranches(fetchAllBranchesFromRepo(repo.getName(), repo.getOwner().getLogin()));
-        return response;
+    public Response mapToUserRepositoriesResponse(GithubRepositoryData repo){
+       return new Response(repo.name(),
+               repo.login(),
+               fetchAllBranchesFromRepo(repo.name(), repo.login()));
     }
 
 }

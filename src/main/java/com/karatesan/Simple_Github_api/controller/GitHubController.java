@@ -1,6 +1,6 @@
 package com.karatesan.Simple_Github_api.controller;
 
-import com.karatesan.Simple_Github_api.dto.UserRepositoriesResponse;
+import com.karatesan.Simple_Github_api.dto.Response;
 import com.karatesan.Simple_Github_api.service.GithubService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +37,7 @@ public class GitHubController {
      * @return a list of {@code UserRepositoriesResponse} containing details of the user's repositories, or an empty list if the header is not {@code application/json}
      */
     @GetMapping("/user/repos/{username}")
-    public List<UserRepositoriesResponse> getAllReposFromUser(
+    public List<Response> getAllReposFromUser(
             @PathVariable String username,
             @RequestHeader(value = HttpHeaders.ACCEPT, defaultValue = "application/json") String header) {
 
