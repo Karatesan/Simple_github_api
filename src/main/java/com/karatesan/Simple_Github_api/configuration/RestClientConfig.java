@@ -37,7 +37,7 @@ public class RestClientConfig {
      * @return a {@link RestClient} instance with the preconfigured {@code Authorization} header
      */
     @Bean
-    public RestClient restClient() {
+    public RestClient.Builder restClient() {
         return RestClient.builder()
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + authorization)
                 .defaultStatusHandler(HttpStatusCode::is4xxClientError, (request, response) -> {
@@ -45,11 +45,11 @@ public class RestClientConfig {
                         throw new UserNotFoundException("User not found.");
                     if(response.getStatusCode().equals(HttpStatus.TOO_MANY_REQUESTS) || response.getStatusCode().equals(HttpStatus.UNAUTHORIZED))
                         throw new TooManyRequestsException("Github API rate limit exceeded");
-                })
-                .build();
+                });
+
     }
-    @Bean
-    public RestClient.Builder restClientBuilder(){
-        return RestClient.builder();
-    }
+//    @Bean
+//    public RestClient.Builder restClientBuilder(){
+//        return RestClient.builder();
+//    }
 }

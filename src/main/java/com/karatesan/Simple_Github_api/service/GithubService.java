@@ -5,6 +5,7 @@ import com.karatesan.Simple_Github_api.dto.GithubRepositoryData;
 import com.karatesan.Simple_Github_api.dto.Response;
 import com.karatesan.Simple_Github_api.ecxeption.TooManyRequestsException;
 import com.karatesan.Simple_Github_api.ecxeption.UserNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -19,11 +20,10 @@ import java.util.stream.Stream;
 @Service
 public class GithubService {
 
-    private RestClient restClient;
+    @Autowired
+    private RestClient.Builder builder;
 
-    public GithubService(RestClient restClient) {
-        this.restClient = restClient;
-    }
+
 
     /**
      * Fetches all repositories for a specified user via {@code RestClient}. Only non-fork repositories are included.
@@ -36,6 +36,7 @@ public class GithubService {
      */
 
     public List<Response> fetchRepos(String username) {
+        RestClient restClient = builder.build();
         GithubRepositoryData[] repositories = restClient.get()
                 .uri("https://api.github.com/users/{username}/repos", username)
                 .accept(MediaType.APPLICATION_JSON)
@@ -59,6 +60,7 @@ public class GithubService {
      */
 
     public List<GithubBranchData> fetchAllBranchesFromRepo(String repoName, String username) {
+        RestClient restClient = builder.build();
         GithubBranchData[] githubBranchData = restClient.get()
                 .uri("https://api.github.com/repos/{username}/{repoName}/branches", username, repoName)
                 .accept(MediaType.APPLICATION_JSON)
